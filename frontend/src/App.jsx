@@ -3,6 +3,8 @@ import "./App.css";
 
 const API_URL = "http://127.0.0.1:5000";
 
+const LIMITE_ARQUIVO_MB = 50 * 1024 * 1024;
+
 function App() {
   const [arquivo, setArquivo] = useState(null);
   const [carregando, setCarregando] = useState(false);
@@ -46,6 +48,13 @@ function App() {
 
   function selecionarArquivo(evento) {
     const arquivoSelecionado = evento.target.files[0];
+    if (arquivoSelecionado && arquivoSelecionado.size > LIMITE_ARQUIVO) {
+  setArquivo(null);
+  setResultado(null);
+  setErro("O arquivo ultrapassa o limite de 50 MB.");
+  evento.target.value = "";
+  return;
+}
 
     setArquivo(arquivoSelecionado || null);
     setResultado(null);

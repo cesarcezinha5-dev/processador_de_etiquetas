@@ -6,11 +6,16 @@ from processador_etiquetas import processar_etiquetas
 
 app = Flask(__name__)
 
+app.config["MAX_CONTENT_LENGTH"] = 50 * 1024 * 1024
+
 ORIGENS_PERMITIDAS = {
     "http://localhost:5173",
     "http://127.0.0.1:5173"
 }
 
+@app.errorhandler(413)
+def arquivo_grande_demais(erro):
+    return {"erro": "O arquivo enviado é muito grande."}, 413
 
 @app.after_request
 def adicionar_cors(resposta):
@@ -31,7 +36,7 @@ PASTA_UPLOADS.mkdir(exist_ok=True)
 def verificar_status():
     return {
         "status": "online",
-        "mensagem": "Servidor novo com CORS"
+        "mensagem": "Sistema de etiquetas funcionando"
     }
 @app.route("/processar", methods=["POST"])
 def receber_pdf():
