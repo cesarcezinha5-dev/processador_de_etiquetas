@@ -51,6 +51,24 @@ def abrir_interface():
     )
 
 
+@app.route("/favicon.svg")
+def abrir_favicon():
+    return send_from_directory(
+        PASTA_FRONTEND,
+        "favicon.svg",
+        mimetype="image/svg+xml"
+    )
+
+
+@app.route("/favicon.ico")
+def abrir_favicon_ico():
+    return send_from_directory(
+        PASTA_FRONTEND,
+        "favicon.svg",
+        mimetype="image/svg+xml"
+    )
+
+    
 @app.route("/status")
 def verificar_status():
     return {

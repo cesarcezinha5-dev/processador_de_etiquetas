@@ -2,7 +2,7 @@ import { useState } from "react";
 import "./App.css";
 
 
-const LIMITE_ARQUIVO_MB = 50 * 1024 * 1024;
+const LIMITE_ARQUIVO = 50 * 1024 * 1024;
 
 function App() {
   const [arquivo, setArquivo] = useState(null);
@@ -26,7 +26,7 @@ function App() {
     setErro("");
 
     try {
-      const resposta = await fetch(`$/processar`, {
+      const resposta = await fetch("/processar", {
         method: "POST",
         body: formulario,
       });
