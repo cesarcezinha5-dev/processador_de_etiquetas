@@ -56,6 +56,13 @@ def processar_etiquetas(caminho_entrada, caminho_saida=None):
             ]
 
             for etiqueta in etiquetas:
+                conteudo_etiqueta = pagina.get_text(
+                    "text", clip=etiqueta
+                ).strip()
+                
+                if not conteudo_etiqueta:
+                    continue
+
                 nova_pagina = novo_pdf.new_page(
                     width=largura_etiqueta,
                     height=altura_etiqueta
