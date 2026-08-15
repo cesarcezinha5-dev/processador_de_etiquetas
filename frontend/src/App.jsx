@@ -1,7 +1,6 @@
 import { useState } from "react";
 import "./App.css";
 
-const API_URL = "http://127.0.0.1:5000";
 
 const LIMITE_ARQUIVO_MB = 50 * 1024 * 1024;
 
@@ -27,7 +26,7 @@ function App() {
     setErro("");
 
     try {
-      const resposta = await fetch(`${API_URL}/processar`, {
+      const resposta = await fetch(`$/processar`, {
         method: "POST",
         body: formulario,
       });

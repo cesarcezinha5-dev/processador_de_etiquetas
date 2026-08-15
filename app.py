@@ -4,18 +4,32 @@ from pathlib import Path
 from processador_etiquetas import processar_etiquetas
 
 
-app = Flask(__name__)
+PASTA_PROJETO = Path(__file__).resolve().parent
+PASTA_FRONTEND = PASTA_PROJETO / "frontend" / "dist"
+PASTA_UPLOADS = PASTA_PROJETO / "uploads"
+
+PASTA_UPLOADS.mkdir(exist_ok=True)
+
+
+app = Flask(
+    __name__,
+    static_folder=str(PASTA_FRONTEND / "assets"),
+    static_url_path="/assets"
+)
 
 app.config["MAX_CONTENT_LENGTH"] = 50 * 1024 * 1024
+
 
 ORIGENS_PERMITIDAS = {
     "http://localhost:5173",
     "http://127.0.0.1:5173"
 }
 
+
 @app.errorhandler(413)
 def arquivo_grande_demais(erro):
     return {"erro": "O arquivo enviado é muito grande."}, 413
+
 
 @app.after_request
 def adicionar_cors(resposta):
@@ -28,8 +42,13 @@ def adicionar_cors(resposta):
 
     return resposta
 
-PASTA_UPLOADS = Path("uploads")
-PASTA_UPLOADS.mkdir(exist_ok=True)
+
+@app.route("/")
+def abrir_interface():
+    return send_from_directory(
+        PASTA_FRONTEND,
+        "index.html"
+    )
 
 
 @app.route("/status")
@@ -38,6 +57,8 @@ def verificar_status():
         "status": "online",
         "mensagem": "Sistema de etiquetas funcionando"
     }
+
+
 @app.route("/processar", methods=["POST"])
 def receber_pdf():
     if "arquivo" not in request.files:
@@ -52,6 +73,7 @@ def receber_pdf():
         return {"erro": "O arquivo enviado não é um PDF válido."}, 400
 
     nome_seguro = secure_filename(arquivo.filename)
+
     if nome_seguro == "":
         return {"erro": "Nome de arquivo inválido."}, 400
 
@@ -61,20 +83,32 @@ def receber_pdf():
     try:
         resultado = processar_etiquetas(caminho_entrada)
         nome_resultado = Path(resultado["caminho"]).name
+
     except FileNotFoundError as erro:
         return {"erro": str(erro)}, 404
+
     except ValueError as erro:
         return {"erro": str(erro)}, 400
+
     except Exception as erro:
-        app.logger.Exception(
+        app.logger.exception(
             "Erro inesperado ao processar o arquivo: %s",
             erro
         )
-        return{
+
+        return {
             "erro": "Ocorreu um erro ao processar o arquivo."
         }, 500
 
-try:
+    finally:
+        try:
+            caminho_entrada.unlink(missing_ok=True)
+        except OSError as erro:
+            app.logger.warning(
+                "Erro ao remover arquivo temporário: %s",
+                erro
+            )
+
     return {
         "quantidade": resultado["quantidade"],
         "download_url": url_for(
@@ -83,12 +117,8 @@ try:
             _external=True
         )
     }, 200
-finally:
-    try:
-        caminho_entrada.unlink(missing_ok=True)
-    except OSError as erro:
-        app.logger.warning("Erro ao remover arquivo: %s", erro)
-    
+
+
 @app.route("/downloads/<path:nome_arquivo>")
 def baixar_pdf(nome_arquivo):
     return send_from_directory(
@@ -96,5 +126,7 @@ def baixar_pdf(nome_arquivo):
         nome_arquivo,
         as_attachment=True
     )
+
+
 if __name__ == "__main__":
     app.run(debug=True)
