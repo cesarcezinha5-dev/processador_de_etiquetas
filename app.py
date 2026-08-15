@@ -65,7 +65,16 @@ def receber_pdf():
         return {"erro": str(erro)}, 404
     except ValueError as erro:
         return {"erro": str(erro)}, 400
+    except Exception as erro:
+        app.logger.Exception(
+            "Erro inesperado ao processar o arquivo: %s",
+            erro
+        )
+        return{
+            "erro": "Ocorreu um erro ao processar o arquivo."
+        }, 500
 
+try:
     return {
         "quantidade": resultado["quantidade"],
         "download_url": url_for(
@@ -74,6 +83,12 @@ def receber_pdf():
             _external=True
         )
     }, 200
+finally:
+    try:
+        caminho_entrada.unlink(missing_ok=True)
+    except OSError as erro:
+        app.logger.warning("Erro ao remover arquivo: %s", erro)
+    
 @app.route("/downloads/<path:nome_arquivo>")
 def baixar_pdf(nome_arquivo):
     return send_from_directory(
